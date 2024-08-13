@@ -1,0 +1,9 @@
+.msg{
+    border-radius: 8px 8px 0 8px;
+}
+.r-msg .msg{
+    border-radius: 8px 8px 8px 0;
+}
+.r-msg{
+    justify-content: start;
+}

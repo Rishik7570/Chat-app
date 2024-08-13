@@ -1,0 +1,7 @@
+.chat{
+    background: linear-gradient(#596aff,#383699);
+}
+
+.chat-container{
+    grid-template-columns: 1fr 2fr 1fr;
+}
