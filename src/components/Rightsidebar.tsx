@@ -1,4 +1,5 @@
 import assets from '../assets/assets'
+import { logout } from '../config/firebase'
 import './css/rightsidebar.css'
 
 const Rightsidebar = () => {
@@ -23,7 +24,7 @@ const Rightsidebar = () => {
           <img src={assets.pic2} alt="" className="w-14 rounded-md cursor-pointer" />
         </div>
       </div>
-      <button className="absolute bottom-0 left-[50%] translate-x-[-50%] bg-sky-500
+      <button onClick={()=>logout()} className="absolute bottom-0 left-[50%] translate-x-[-50%] bg-sky-500
          text-white text-[12px] font-light px-14 py-2 rounded-3xl cursor-pointer mb-3">Logout
       </button>
     </div>
