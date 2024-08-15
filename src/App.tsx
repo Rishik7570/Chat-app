@@ -3,7 +3,7 @@ import Login from "./pages/Login"
 import Chat from "./pages/Chat"
 import Profile from "./pages/Profile"
 import { ToastContainer } from 'react-toastify';
-  import 'react-toastify/dist/ReactToastify.css';
+import 'react-toastify/dist/ReactToastify.css';
 import { useContext, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./config/firebase";
@@ -25,7 +25,7 @@ const App = () => {
         navigate('/')
       }
     })
-  },[navigate])
+  },[])
 
   return (
     <div>

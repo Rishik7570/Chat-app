@@ -14,13 +14,9 @@ const Login = () => {
     e.preventDefault()
     if(signstate==="Sign Up"){
       signup(username,email,password)
-      console.log("Created Account");
-      
     }
     else{
-      login(email,password)
-      console.log("Logged in");
-      
+      login(email,password)   
     }
   }
 

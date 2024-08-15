@@ -1,8 +1,12 @@
 import './css/leftsidebar.css'
 import assets from "../assets/assets"
+import { useNavigate } from 'react-router-dom'
 
 
 const Leftsidebar = () => {
+
+  const navigate = useNavigate()
+
   return (
     <div className="ls bg-[#001030] text-white h-[75vh]">
       <div className="ls-top p-5">
@@ -11,7 +15,7 @@ const Leftsidebar = () => {
           <div className="menu relative py-2">
             <img src={assets.menu_icon} alt="" className="max-h-5 opacity-60 cursor-pointer" />
             <div className="sub-menu absolute top-full right-0 w-32 bg-white text-black p-5 rounded hidden">
-              <p className='cursor-pointer text-sm'>Edit Profile</p>
+              <p className='cursor-pointer text-sm' onClick={()=>navigate('/profile')}>Edit Profile</p>
               <hr className='line bg-[#a4a4a4] my-2 h-[1px]'/>
               <p className='cursor-pointer text-sm'>Logout</p>
             </div>
