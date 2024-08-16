@@ -14,10 +14,6 @@ type userdatatype = {
     username:string
 }
 
-type chatdatatype = {
-    chatData?:string
-}
-
 
 type contextproviderprops = {
     children:ReactNode
@@ -26,6 +22,10 @@ interface appcontext {
     loadUserdata: (uid: string) => Promise<void>
     userdata:userdatatype|undefined
     setUserdata: React.Dispatch<React.SetStateAction<userdatatype | undefined>>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    chatdata: any[]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setChatdata: React.Dispatch<React.SetStateAction<any[]>>
 }
 
 
@@ -37,7 +37,8 @@ const ContextProvider = (props:contextproviderprops)=>{
     const navigate = useNavigate()
 
     const [userdata,setUserdata] = useState<userdatatype>()
-    const [chatdata,setChatdata] = useState([])
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [chatdata,setChatdata] = useState<any[]>([])
 
 
     const loadUserdata = async(uid:string)=>{
@@ -74,8 +75,21 @@ const ContextProvider = (props:contextproviderprops)=>{
         if(userdata){
             const chatRef = doc(db,"chats",userdata.id)
             const unSub = onSnapshot(chatRef,async(res)=>{
-                const data = res.data() as chatdatatype
+                if(res.exists()){
+                    const chatitem = res.data().chatData
+                    const tempitem = []
+                    for(const item of chatitem){
+                        const userRef = doc(db,"users",item.rID)
+                        const userSnap = await getDoc(userRef)
+                        const userData = userSnap.data()
+                        tempitem.push({...item,userData})
+                    }
+                    setChatdata(tempitem.sort((a,b)=>b.updatedAt - a.updatedAt))
+                }
             })
+            return ()=>{
+                unSub()
+            }
         }
     },[userdata])
     
