@@ -1,7 +1,7 @@
 import './css/leftsidebar.css'
 import assets from "../assets/assets"
 import { useNavigate } from 'react-router-dom'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { db, logout } from '../config/firebase'
 import { useContext, useState } from 'react'
 import { Context } from '../context/context'
@@ -21,8 +21,11 @@ const Leftsidebar = () => {
 
   const navigate = useNavigate()
   const context = useContext(Context)
-  const [user,setUser] = useState<userdatatype | null>(null)
+  const [userR,setUserR] = useState<userdatatype | null>(null)
   const [showSearch,setShowSearch] = useState(false)
+
+  const [friendIDs,setfriendsIDs] = useState<string[]>([])
+  const [friendUsernames,setFriendUsernames] = useState<string[]>([])
 
   const inputHandler = async(e:React.ChangeEvent<HTMLInputElement>)=>{
     try {
@@ -33,21 +36,42 @@ const Leftsidebar = () => {
         const q = query(userRef,where("username","==",input.toLowerCase()))
         const querySnap = await getDocs(q)
         if(!querySnap.empty && querySnap.docs[0].data().id !== context?.userdata?.id){
-          console.log(querySnap.docs[0].data());
-          setUser(querySnap.docs[0].data() as userdatatype)
+          setUserR(querySnap.docs[0].data() as userdatatype)
         }
         else{
-          setUser(null)
+          setUserR(null)
         }
       }
       else{
         setShowSearch(false)
-      }
+      }  
       
     } catch (error) {
       console.error(error)
     }
   }
+
+  const addfriend = async(userR:userdatatype)=>{
+    try {
+      
+      if(context?.userdata?.id){
+        const friendsRef = doc(db,"friends",context.userdata.id)
+        
+        setfriendsIDs(prev=>[...prev,userR.id])
+        setFriendUsernames(prev=>[...prev,userR.username])
+
+      
+        await updateDoc(friendsRef,{
+          friendID:friendIDs,
+          friendUsername:friendUsernames
+        })  
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+  
+
 
   return (
     <div className="ls bg-[#001030] text-white h-[75vh]">
@@ -70,21 +94,13 @@ const Leftsidebar = () => {
         </div>
       </div>
       <div className="ls-list flex flex-col h-[70%] overflow-y-scroll">
-        {showSearch && user
-        ?<div className='friends add user flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500'>
-          <img src={user.avatar} alt="" className='max-w-none w-9 aspect-square rounded-full' />
-          <p>{user.name}</p>
+        {showSearch && userR
+        ?<div onClick={()=>addfriend(userR)} className='friends add user flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500'>
+          <img src={userR.avatar} alt="" className='max-w-none w-9 aspect-square rounded-full' />
+          <p>{userR.name}</p>
         </div>
         :
-        Array(12).fill('').map((item,index)=>(
-          <div key={index} className="friends flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500">
-          <img src={assets.profile_img} alt="" className="max-w-none w-9 aspect-square rounded-full" />
-          <div className="flex flex-col">
-            <p className="">Abhisek Sarkar</p>
-            <span className="text-[#9f9f9f] text-[11px]">What's up niggs?</span>
-          </div>
-        </div>
-        ))
+        <></>
         }
         
       </div>

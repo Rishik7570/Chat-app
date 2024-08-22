@@ -36,8 +36,11 @@ const signup = async(username:string,email:string,password:string)=>{
           bio:"Hey there, I am using Chatapp",
           lastseen:Date.now()
         })
-        await setDoc(doc(db,"chats",user.uid),{
-          chatData:[""]
+        const friendsRef = doc(db,'friends',user.uid)
+
+        await setDoc(friendsRef,{
+          friendID:[],
+          friendUsername:[]
         })
     } catch (error) {
         console.error(error)
