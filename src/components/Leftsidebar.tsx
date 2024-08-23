@@ -1,7 +1,7 @@
 import './css/leftsidebar.css'
 import assets from "../assets/assets"
 import { useNavigate } from 'react-router-dom'
-import { collection, doc, getDocs, query, updateDoc, where } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
 import { db, logout } from '../config/firebase'
 import { useContext, useState } from 'react'
 import { Context } from '../context/context'
@@ -24,8 +24,6 @@ const Leftsidebar = () => {
   const [userR,setUserR] = useState<userdatatype | null>(null)
   const [showSearch,setShowSearch] = useState(false)
 
-  const [friendIDs,setfriendsIDs] = useState<string[]>([])
-  const [friendUsernames,setFriendUsernames] = useState<string[]>([])
 
   const inputHandler = async(e:React.ChangeEvent<HTMLInputElement>)=>{
     try {
@@ -53,14 +51,22 @@ const Leftsidebar = () => {
 
   const addfriend = async(userR:userdatatype)=>{
     try {
-      
+      let friendIDs:string[]=[]
+      let friendUsernames:string[]=[]
+          
       if(context?.userdata?.id){
         const friendsRef = doc(db,"friends",context.userdata.id)
-        
-        setfriendsIDs(prev=>[...prev,userR.id])
-        setFriendUsernames(prev=>[...prev,userR.username])
-
+        const docSnap = await getDoc(friendsRef);
       
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        friendIDs = data.friendID || [];
+        friendUsernames = data.friendUsername || [];
+      }
+      
+      friendIDs.push(userR.id);
+      friendUsernames.push(userR.name);
+
         await updateDoc(friendsRef,{
           friendID:friendIDs,
           friendUsername:friendUsernames
