@@ -1,88 +1,118 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { createContext, ReactNode, useState } from "react";
+import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { createContext, ReactNode, useEffect, useState } from "react";
 import { auth, db } from "../config/firebase";
 import { useNavigate } from "react-router-dom";
 
-
 type userdatatype = {
-    avatar:string,
-    bio:string,
-    email:string,
-    id:string,
-    lastseen:number,
-    name:string,
-    username:string
+  avatar: string;
+  bio: string;
+  email: string;
+  id: string;
+  lastseen: number;
+  name: string;
+  username: string;
+};
+
+type chats = {
+  messageID:string
+  lastMessage:string
+  rId:string
+  updatedAt:number
+  messageSeen:boolean
 }
 
-
+export type chatWithUserData = chats & {
+  userData: userdatatype;
+};
 
 
 type contextproviderprops = {
-    children:ReactNode
-}
+  children: ReactNode;
+};
 interface appcontext {
-    loadUserdata: (uid: string) => Promise<void>
-    userdata:userdatatype|undefined
-    setUserdata: React.Dispatch<React.SetStateAction<userdatatype | undefined>>
-    msg: string
-    setmsg: React.Dispatch<React.SetStateAction<string>>
+  loadUserdata: (uid: string) => Promise<void>;
+  userdata: userdatatype | undefined;
+  chatdata: chatWithUserData[];
+  messagesID: string
+  setMessagesID: React.Dispatch<React.SetStateAction<string>>
+  messages: string[]
+  setMessages: React.Dispatch<React.SetStateAction<string[]>>
+  chatuser: chatWithUserData | undefined
+  setChatuser: React.Dispatch<React.SetStateAction<chatWithUserData | undefined>>
 }
 
+export const Context = createContext<appcontext | null>(null);
 
+const ContextProvider = (props: contextproviderprops) => {
+  const navigate = useNavigate();
 
-export const Context = createContext<appcontext | null>(null)
+  const [userdata, setUserdata] = useState<userdatatype>();
+  const [chatdata, setchatdata] = useState<chatWithUserData[]>([]);
+  const [messagesID,setMessagesID] = useState('')
+  const [messages,setMessages] = useState<string[]>([])
+  const [chatuser,setChatuser] = useState<chatWithUserData>()
 
-const ContextProvider = (props:contextproviderprops)=>{
+  const loadUserdata = async (uid: string) => {
+    try {
+      const userRef = doc(db, "users", uid);
+      const userSnap = await getDoc(userRef);
+      const data = userSnap.data() as userdatatype;
+      setUserdata(data);
 
-    const navigate = useNavigate()
+      if (userdata?.avatar && userdata.name) {
+        navigate("/chat");
+      } else {
+        navigate("/profile");
+      }
 
-    const [userdata,setUserdata] = useState<userdatatype>()
-    const [msg,setmsg] = useState("")
-
-
-    const loadUserdata = async(uid:string)=>{
-        try {
-            const userRef = doc(db,'users',uid)
-            const userSnap = await getDoc(userRef)
-            const data = userSnap.data() as userdatatype
-            setUserdata(data)
-
-            if(userdata?.avatar && userdata.name){
-                navigate('/chat')
-            }
-            else{
-                navigate('/profile')
-            }
-            
-            await updateDoc(userRef,{
-                lastseen:Date.now()
-            })
-            setInterval(async()=>{
-                if(auth){
-                    await updateDoc(userRef,{
-                        lastseen:Date.now()
-                    })  
-                }
-            },60000)    
-        } 
-        catch (error) {
-            console.log(error);
+      await updateDoc(userRef, {
+        lastseen: Date.now(),
+      });
+      setInterval(async () => {
+        if (auth) {
+          await updateDoc(userRef, {
+            lastseen: Date.now(),
+          });
         }
+      }, 60000);
+    } catch (error) {
+      console.log(error);
     }
+  };
 
-    
-
-    const value:appcontext = {
-        userdata,setUserdata,
-        loadUserdata,
-        msg,setmsg
+  useEffect(() => {
+    if (userdata) {
+      const chatref = doc(db, "chats", userdata.id);
+      const unSub = onSnapshot(chatref, async (res) => {
+        if (res.exists()) {
+          const chatitem = res.data().chatsdata as chats[];
+          const tempitem:chatWithUserData[] = [];
+          for (const item of chatitem) {
+            const userRef = doc(db, "users", item.rId);
+            const usersnap = await getDoc(userRef);
+            const userData = usersnap.data() as userdatatype;
+            
+            tempitem.push({ ...item, userData });
+          }
+          setchatdata(tempitem.sort((a, b) => b.updatedAt - a.updatedAt));
+        }
+      });
+      return () => {
+        unSub();
+      };
     }
+  }, [userdata]);
 
-    return(
-        <Context.Provider value={value}>
-            {props.children}
-        </Context.Provider>
-    )
-}
+  const value: appcontext = {
+    userdata,
+    loadUserdata,
+    chatdata,
+    messages,setMessages,
+    messagesID,setMessagesID,
+    chatuser,setChatuser
+  };
 
-export default ContextProvider
+  return <Context.Provider value={value}>{props.children}</Context.Provider>;
+};
+
+export default ContextProvider;

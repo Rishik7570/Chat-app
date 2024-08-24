@@ -1,10 +1,11 @@
 import './css/leftsidebar.css'
 import assets from "../assets/assets"
 import { useNavigate } from 'react-router-dom'
-import { collection, doc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore'
+import { arrayUnion, collection, doc, getDocs, query, serverTimestamp, setDoc, updateDoc, where } from 'firebase/firestore'
 import { db, logout } from '../config/firebase'
 import { useContext, useState } from 'react'
-import { Context } from '../context/context'
+import { chatWithUserData, Context } from '../context/context'
+
 
 type userdatatype = {
   avatar:string,
@@ -34,7 +35,15 @@ const Leftsidebar = () => {
         const q = query(userRef,where("username","==",input.toLowerCase()))
         const querySnap = await getDocs(q)
         if(!querySnap.empty && querySnap.docs[0].data().id !== context?.userdata?.id){
-          setUserR(querySnap.docs[0].data() as userdatatype)
+          let userExists = false
+          context?.chatdata.map(user=>{
+            if(user.rId === querySnap.docs[0].data().id){
+              userExists = true
+            }
+          })
+          if(!userExists){
+            setUserR(querySnap.docs[0].data() as userdatatype)
+          } 
         }
         else{
           setUserR(null)
@@ -49,32 +58,44 @@ const Leftsidebar = () => {
     }
   }
 
-  const addfriend = async(userR:userdatatype)=>{
+  const addchat = async(userR:userdatatype)=>{
     try {
-      let friendIDs:string[]=[]
-      let friendUsernames:string[]=[]
-          
-      if(context?.userdata?.id){
-        const friendsRef = doc(db,"friends",context.userdata.id)
-        const docSnap = await getDoc(friendsRef);
-      
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        friendIDs = data.friendID || [];
-        friendUsernames = data.friendUsername || [];
-      }
-      
-      friendIDs.push(userR.id);
-      friendUsernames.push(userR.name);
+      const messageRef = collection(db,"messages")
+      const chatsRef = collection(db,"chats")
+        const newmsgRef = doc(messageRef)
 
-        await updateDoc(friendsRef,{
-          friendID:friendIDs,
-          friendUsername:friendUsernames
-        })  
-      }
+        await setDoc(newmsgRef,{
+          createAt:serverTimestamp(),
+          messages:[]
+        })
+
+        await updateDoc(doc(chatsRef,userR.id),{
+          chatsdata:arrayUnion({
+            messageID:newmsgRef.id,
+            lastMessage:"",
+            rId:context?.userdata?.id,
+            updatedAt:Date.now(),
+            messageSeen:true
+          })
+        })
+        await updateDoc(doc(chatsRef,context?.userdata?.id),{
+          chatsdata:arrayUnion({
+            messageID:newmsgRef.id,
+            lastMessage:"",
+            rId:userR.id,
+            updatedAt:Date.now(),
+            messageSeen:true
+          })
+        })
+
     } catch (error) {
       console.error(error)
     }
+  }
+
+  const setchat = async(item:chatWithUserData)=>{
+    context?.setMessagesID(item.messageID)
+    context?.setChatuser(item)
   }
   
 
@@ -101,12 +122,17 @@ const Leftsidebar = () => {
       </div>
       <div className="ls-list flex flex-col h-[70%] overflow-y-scroll">
         {showSearch && userR
-        ?<div onClick={()=>addfriend(userR)} className='friends add user flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500'>
+        ?<div onClick={()=>addchat(userR)} className='friends add user flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500'>
           <img src={userR.avatar} alt="" className='max-w-none w-9 aspect-square rounded-full' />
           <p>{userR.name}</p>
         </div>
-        :
-        <></>
+        : context?.chatdata.map((item,index)=>(
+          <div onClick={()=>setchat(item)} key={index} className="friends flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500">
+            <img src={item.userData.avatar} alt="" className='max-w-none w-9 aspect-square rounded-full'/>
+            <p>{item.userData.name}</p>
+            <span className=''>{item.lastMessage}</span>
+          </div>
+        ))
         }
         
       </div>
