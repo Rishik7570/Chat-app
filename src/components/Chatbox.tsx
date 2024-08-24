@@ -1,9 +1,15 @@
 import './css/chatbox.css'
 import assets from "../assets/assets"
+import { useContext, useState } from 'react'
+import { Context } from '../context/context'
 
 
 const Chatbox = () => {
-  return (
+
+  const context = useContext(Context)
+  const [input,setInput] = useState('')
+
+  return context?.chatuser? (
     <div className="chat-box h-[75vh] relative bg-[#f1f5ff]">
       {/* Top Bar */}
 
@@ -54,6 +60,10 @@ const Chatbox = () => {
       </div>
     </div>
   )
+  :<div className=''>
+    <img src={assets.logo_icon} alt="" className='' />
+    <p>Chat anytime, anywhere</p>
+  </div>
 }
 
 export default Chatbox

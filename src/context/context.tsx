@@ -32,7 +32,9 @@ type contextproviderprops = {
 interface appcontext {
   loadUserdata: (uid: string) => Promise<void>;
   userdata: userdatatype | undefined;
+  setUserdata: React.Dispatch<React.SetStateAction<userdatatype | undefined>>;
   chatdata: chatWithUserData[];
+  setchatdata: React.Dispatch<React.SetStateAction<chatWithUserData[]>>;
   messagesID: string
   setMessagesID: React.Dispatch<React.SetStateAction<string>>
   messages: string[]
@@ -104,9 +106,9 @@ const ContextProvider = (props: contextproviderprops) => {
   }, [userdata]);
 
   const value: appcontext = {
-    userdata,
+    userdata,setUserdata,
     loadUserdata,
-    chatdata,
+    chatdata,setchatdata,
     messages,setMessages,
     messagesID,setMessagesID,
     chatuser,setChatuser
