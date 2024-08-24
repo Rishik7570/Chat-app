@@ -36,9 +36,6 @@ const signup = async(username:string,email:string,password:string)=>{
           bio:"Hey there, I am using Chatapp",
           lastseen:Date.now()
         })
-        await setDoc(doc(db,'friends',user.uid),{
-          friends:[]
-        })
         await setDoc(doc(db,'chats',user.uid),{
           chatsdata:[]
         })

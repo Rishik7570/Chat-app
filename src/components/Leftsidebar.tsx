@@ -127,10 +127,14 @@ const Leftsidebar = () => {
           <p>{userR.name}</p>
         </div>
         : context?.chatdata.map((item,index)=>(
-          <div onClick={()=>setchat(item)} key={index} className="friends flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500">
+          <div onClick={()=>setchat(item)} key={index}
+             className="friends flex items-center gap-2 px-5 py-2 text-sm cursor-pointer hover:bg-sky-500">
             <img src={item.userData.avatar} alt="" className='max-w-none w-9 aspect-square rounded-full'/>
-            <p>{item.userData.name}</p>
-            <span className=''>{item.lastMessage}</span>
+            <div className="">
+              <p>{item.userData.name}</p>
+              <span className='text-gray-400'>{item.lastMessage}</span>
+            </div>
+            
           </div>
         ))
         }

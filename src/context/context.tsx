@@ -13,7 +13,7 @@ type userdatatype = {
   username: string;
 };
 
-type chats = {
+export type chats = {
   messageID:string
   lastMessage:string
   rId:string
@@ -24,6 +24,12 @@ type chats = {
 export type chatWithUserData = chats & {
   userData: userdatatype;
 };
+
+export type messages = {
+  sID:string
+  text:string
+  createdAt: Date
+}
 
 
 type contextproviderprops = {
@@ -37,8 +43,8 @@ interface appcontext {
   setchatdata: React.Dispatch<React.SetStateAction<chatWithUserData[]>>;
   messagesID: string
   setMessagesID: React.Dispatch<React.SetStateAction<string>>
-  messages: string[]
-  setMessages: React.Dispatch<React.SetStateAction<string[]>>
+  messages: messages[]
+  setMessages: React.Dispatch<React.SetStateAction<messages[]>>
   chatuser: chatWithUserData | undefined
   setChatuser: React.Dispatch<React.SetStateAction<chatWithUserData | undefined>>
 }
@@ -51,7 +57,7 @@ const ContextProvider = (props: contextproviderprops) => {
   const [userdata, setUserdata] = useState<userdatatype>();
   const [chatdata, setchatdata] = useState<chatWithUserData[]>([]);
   const [messagesID,setMessagesID] = useState('')
-  const [messages,setMessages] = useState<string[]>([])
+  const [messages,setMessages] = useState<messages[]>([])
   const [chatuser,setChatuser] = useState<chatWithUserData>()
 
   const loadUserdata = async (uid: string) => {
