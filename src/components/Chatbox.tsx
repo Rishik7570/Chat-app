@@ -132,7 +132,7 @@ const Chatbox = () => {
       <div className="chat-user px-4 py-2 gap-2 flex items-center border-b-[1px] border-b-[#c6c6c6]">
         <img src={context.chatuser.userData.avatar} alt="" className="w-7 rounded-full"/>
         <p className="flex-1 font-medium text-xl flex items-center gap-2">{context.chatuser.userData.name}
-            <img src={assets.green_dot} alt="" className="dot"/></p>
+            {Date.now()-context.chatuser.userData.lastseen <= 70000 ?<img src={assets.green_dot} alt="" className="dot"/>:null}</p>
         <img src={assets.help_icon} alt="" className="help w-7"/>
       </div>
 
