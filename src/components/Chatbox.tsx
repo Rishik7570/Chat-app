@@ -4,6 +4,7 @@ import { useContext, useEffect, useState } from 'react'
 import { chats, Context, messages } from '../context/context'
 import { arrayUnion, doc, getDoc, onSnapshot, Timestamp, updateDoc } from 'firebase/firestore'
 import { db } from '../config/firebase'
+import upload from '../lib/upload'
 
 
 const Chatbox = () => {
@@ -46,13 +47,56 @@ const Chatbox = () => {
         })
         }
         
-
-        
       }
     } catch (error) {
       console.error(error)
     }
     setInput("")
+  }
+
+  const sendimg = async(e:React.ChangeEvent<HTMLInputElement>)=> {
+    try {
+      if(e.target.files){
+        const fileURL = await upload(e.target.files[0])
+        if(fileURL && context?.messagesID){
+
+          await updateDoc(doc(db,'messages',context.messagesID),{
+            messages:arrayUnion({
+              sID:context.userdata?.id,
+              image:fileURL,
+              createdAt:new Date()
+            })
+          })
+
+          if(context.chatuser && context.userdata){
+            const userIDs = [context.chatuser.rId,context.userdata.id]
+  
+            userIDs.forEach(async(id)=>{
+            const userchatsRef = doc(db,'chats',id)
+            const userchatSnap = await getDoc(userchatsRef)
+  
+            if(userchatSnap.exists()){
+              const userchatdata = userchatSnap.data().chatsdata as chats[]
+              const chatIndex = userchatdata.findIndex((c)=>c.messageID === context.messagesID)
+  
+              userchatdata[chatIndex].lastMessage = "Image"
+              userchatdata[chatIndex].updatedAt = Date.now()
+  
+              if(userchatdata[chatIndex].rId === context.userdata?.id){
+                userchatdata[chatIndex].messageSeen = false
+              }
+              await updateDoc(userchatsRef,{
+                chatsdata:userchatdata
+              })
+            }
+          })
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
   }
 
   const converttime = (timestamp:Timestamp)=>{
@@ -100,9 +144,11 @@ const Chatbox = () => {
           <div key={index}
             className={msg.sID === context.userdata?.id ?"s-msg flex items-end justify-end gap-1 px-4":
               "r-msg flex items-end gap-1 px-4 flex-row-reverse"}>
+              {msg.image
+              ?<img src={msg.image} className='max-w-60 mb-4'/>
+              :<p className="msg bg-sky-500 p-2 max-w-[200px] text-sm font-light mb-7 text-white">
+              {msg.text}</p>}
 
-          <p className="msg bg-sky-500 p-2 max-w-[200px] text-sm font-light mb-7 text-white">
-              {msg.text}</p>
 
           <div className="text-center text-[9px]">
 
@@ -121,7 +167,7 @@ const Chatbox = () => {
       <div className="chat-input flex items-center gap-3 px-4 py-2 bg-white absolute bottom-0 left-0 right-0">
         <input type="text" onChange={(e)=>setInput(e.target.value)} value={input}
           placeholder="Send a message" className="flex-1 outline-none text-wrap" />
-        <input type="file" id="image" accept="image/png, image/jpeg" hidden />
+        <input type="file" onChange={sendimg} id="image" accept="image/png, image/jpeg" hidden />
         <label htmlFor="image" className="flex">
           <img src={assets.gallery_icon} alt="" className="w-6 cursor-pointer" />
         </label>

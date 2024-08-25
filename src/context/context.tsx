@@ -29,6 +29,7 @@ export type messages = {
   sID:string
   text:string
   createdAt: Date
+  image?:string
 }
 
 
@@ -67,12 +68,6 @@ const ContextProvider = (props: contextproviderprops) => {
       const data = userSnap.data() as userdatatype;
       setUserdata(data);
 
-      if (userdata?.avatar && userdata.name) {
-        navigate("/chat");
-      } else {
-        navigate("/profile");
-      }
-
       await updateDoc(userRef, {
         lastseen: Date.now(),
       });
@@ -108,6 +103,16 @@ const ContextProvider = (props: contextproviderprops) => {
       return () => {
         unSub();
       };
+    }
+  }, [userdata]);
+
+  useEffect(() => {
+    if (userdata) {
+      if (userdata.avatar && userdata.name) {
+        navigate("/chat");
+      } else {
+        navigate("/profile");
+      }
     }
   }, [userdata]);
 
